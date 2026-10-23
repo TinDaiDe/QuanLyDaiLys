@@ -1,67 +1,746 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hệ thống quản lý đại lý</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#1e293b}
-.layout{display:flex;min-height:100vh}.side{width:230px;background:#17324d;color:#fff;padding:22px 14px}.logo{font-weight:bold;font-size:18px;padding:0 10px 20px}.logo small{display:block;font-size:12px;color:#b9c9d9;margin-top:6px}
-nav button{display:block;width:100%;padding:11px 12px;margin:3px 0;text-align:left;border:0;border-radius:7px;background:transparent;color:#dbeafe;cursor:pointer}nav button:hover,nav button.active{background:#31516f;color:white}
-main{flex:1;min-width:0}.top{height:65px;background:white;border-bottom:1px solid #e2e8f0;padding:22px 28px;font-weight:bold}.content{padding:26px;max-width:1300px;margin:auto}
-.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.head h1{font-size:25px;margin:0 0 7px}.head p{margin:0;color:#64748b;font-size:14px}
-button,.btn{cursor:pointer}.primary{border:0;background:#2563eb;color:white;border-radius:7px;padding:10px 14px;font-weight:bold}.secondary{border:1px solid #cbd5e1;background:white;border-radius:7px;padding:9px 12px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.card,.panel{background:white;border:1px solid #e2e8f0;border-radius:11px;padding:18px}.label{font-size:13px;color:#64748b}.num{font-size:27px;font-weight:bold;margin:12px 0 5px}.muted{font-size:12px;color:#64748b}
-.panel{margin-bottom:16px}.panel h2{font-size:16px;margin:0 0 15px}.toolbar{display:flex;gap:9px;margin-bottom:14px}input,select{border:1px solid #cbd5e1;border-radius:7px;padding:10px;font:inherit;min-width:0}input.search{flex:1}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;white-space:nowrap}th{background:#f8fafc;color:#64748b;font-size:12px}tbody tr:hover{background:#f8fafc}
-.tag{display:inline-block;padding:5px 8px;border-radius:20px;background:#dcfce7;color:#166534;font-size:11px}.tag.off{background:#fee2e2;color:#991b1b}
-.notice{background:#eff6ff;color:#1d4ed8;padding:12px;border-radius:7px;font-size:13px;margin-bottom:14px}.error{background:#fef2f2;color:#b91c1c}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#475569}.field input,.field select{width:100%}.full{grid-column:1/-1}
-.modalbg{position:fixed;inset:0;background:#0f172a88;display:flex;align-items:center;justify-content:center;padding:15px}.modal{background:white;padding:22px;border-radius:12px;width:min(560px,100%);max-height:90vh;overflow:auto}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modalhead h2{font-size:19px;margin:0}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.foot{color:#64748b;font-size:12px;margin-top:18px}
-@media(max-width:850px){.side{width:190px}.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.layout{display:block}.side{width:100%;padding:12px}.logo{padding-bottom:10px}nav{display:flex;overflow:auto}nav button{white-space:nowrap;width:auto}.content{padding:15px}.cards{gap:8px}.head{align-items:flex-start;flex-direction:column}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}
-</style></head>
-<body><div class="layout">
-<aside class="side"><div class="logo">AGENCY MANAGER<small>Hệ thống quản lý đại lý</small></div><nav id="nav">
-<button class="active" data-page="dashboard">▦ Tổng quan</button><button data-page="agencies">♙ Đại lý</button><button data-page="exports">▤ Phiếu xuất hàng</button><button data-page="receipts">₫ Phiếu thu tiền</button><button data-page="types">◈ Loại đại lý</button><button data-page="districts">⌖ Quận / Khu vực</button><button data-page="products">▣ Mặt hàng</button><button data-page="units">◫ Đơn vị tính</button><button data-page="accounts">♙ Tài khoản & vai trò</button><button data-page="audit">◷ Audit log</button>
-</nav></aside><main><header class="top" id="crumb">Tổng quan / Dashboard</header><section class="content" id="app"></section></main></div><div id="modalroot"></div>
-<script>
-const db={
-agencies:[
-{id:1,name:"Đại lý Minh Phát",type:"Loại 1",district:"Quận 1",phone:"0901234567",debt:1250000,status:"Hoạt động"},
-{id:2,name:"Đại lý An Khang",type:"Loại 2",district:"Quận 3",phone:"0912345678",debt:650000,status:"Hoạt động"},
-{id:3,name:"Đại lý Thành Công",type:"Loại 1",district:"Quận 5",phone:"0987654321",debt:0,status:"Tạm ngưng"}],
-types:[{id:1,name:"Loại 1",limit:2000000},{id:2,name:"Loại 2",limit:1000000}],
-districts:[{id:1,name:"Quận 1",max:4},{id:2,name:"Quận 3",max:4},{id:3,name:"Quận 5",max:4}],
-units:[{id:1,name:"Thùng"},{id:2,name:"Hộp"},{id:3,name:"Chai"}],
-products:[{id:1,name:"Sản phẩm A",unit:"Thùng",price:100000,status:"Đang kinh doanh"},{id:2,name:"Sản phẩm B",unit:"Hộp",price:50000,status:"Đang kinh doanh"}],
-exports:[{id:1001,agency:"Đại lý Minh Phát",date:"2026-10-20",total:750000,before:500000,after:1250000,creator:"admin"}],
-receipts:[{id:2001,agency:"Đại lý An Khang",date:"2026-10-21",amount:350000,before:1000000,after:650000,creator:"admin"}],
-accounts:[{id:1,username:"admin",name:"Quản trị viên",role:"Quản trị viên",status:"Hoạt động"},{id:2,username:"nvkd",name:"Nguyễn Văn A",role:"Nhân viên kinh doanh",status:"Hoạt động"}],
-audit:[{id:1,user:"admin",object:"Hạn mức nợ Loại 1",old:"1.500.000",now:"2.000.000",time:"2026-10-20 09:30"}],nextAgency:4,nextExport:1002,nextReceipt:2002
-};
-const titles={dashboard:"Dashboard",agencies:"Đại lý",exports:"Phiếu xuất hàng",receipts:"Phiếu thu tiền",types:"Loại đại lý",districts:"Quận / Khu vực",products:"Mặt hàng",units:"Đơn vị tính",accounts:"Tài khoản & vai trò",audit:"Audit log"};
-let page="dashboard";const money=n=>Number(n||0).toLocaleString("vi-VN")+" ₫";const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{page=b.dataset.page;document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x===b));render()});
-function head(t,d,btn=""){return `<div class="head"><div><h1>${t}</h1><p>${d}</p></div>${btn}</div>`}
-function tbl(headers,rows){return `<div class="tablewrap"><table><thead><tr>${headers.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${rows||`<tr><td colspan="${headers.length}">Chưa có dữ liệu</td></tr>`}</tbody></table></div>`}
-function render(){document.getElementById("crumb").textContent="Quản lý / "+titles[page];let el=document.getElementById("app");
-if(page==="dashboard"){el.innerHTML=head("Tổng quan","Tình hình hoạt động của hệ thống")+
-`<div class="cards"><div class="card"><div class="label">Tổng số đại lý</div><div class="num">${db.agencies.length}</div><div class="muted">Hồ sơ đang quản lý</div></div><div class="card"><div class="label">Phiếu xuất</div><div class="num">${db.exports.length}</div><div class="muted">Phiếu đã ghi nhận</div></div><div class="card"><div class="label">Phiếu thu</div><div class="num">${db.receipts.length}</div><div class="muted">Lần thu đã ghi nhận</div></div><div class="card"><div class="label">Tổng công nợ</div><div class="num">${money(db.agencies.reduce((s,a)=>s+a.debt,0))}</div><div class="muted">Dữ liệu mẫu</div></div></div><div class="panel"><h2>Danh sách đại lý</h2>${tbl(["Tên đại lý","Loại","Quận","Điện thoại","Công nợ","Trạng thái"],db.agencies.map(a=>`<tr><td>${esc(a.name)}</td><td>${a.type}</td><td>${a.district}</td><td>${a.phone}</td><td>${money(a.debt)}</td><td>${a.status}</td></tr>`).join(""))}</div>`}
-if(page==="agencies"){el.innerHTML=head("Quản lý đại lý","Hồ sơ, khu vực và công nợ đại lý.",`<button class="primary" onclick="agencyForm()">+ Thêm đại lý</button>`)+`<div class="panel"><div class="toolbar"><input class="search" id="q" placeholder="Tìm theo tên, điện thoại, quận..." oninput="filterRows()"></div><div id="agencytable">${agencyTable()}</div></div>`}
-if(page==="exports"){el.innerHTML=head("Phiếu xuất hàng","Ghi nhận các mặt hàng xuất cho đại lý.",`<button class="primary" onclick="exportForm()">+ Lập phiếu xuất</button>`)+`<div class="panel">${tbl(["Số phiếu","Ngày xuất","Đại lý","Tổng tiền","Nợ trước","Nợ sau","Người lập"],db.exports.map(x=>`<tr><td>PX-${x.id}</td><td>${x.date}</td><td>${esc(x.agency)}</td><td>${money(x.total)}</td><td>${money(x.before)}</td><td>${money(x.after)}</td><td>${x.creator}</td></tr>`).join(""))}</div>`}
-if(page==="receipts"){el.innerHTML=head("Phiếu thu tiền","Ghi nhận tiền thu và cập nhật công nợ.",`<button class="primary" onclick="receiptForm()">+ Lập phiếu thu</button>`)+`<div class="notice">QD4: số tiền thu phải lớn hơn 0 và không được vượt công nợ hiện tại.</div><div class="panel">${tbl(["Số phiếu","Ngày thu","Đại lý","Nợ trước","Số tiền thu","Nợ sau","Người lập"],db.receipts.map(x=>`<tr><td>PT-${x.id}</td><td>${x.date}</td><td>${esc(x.agency)}</td><td>${money(x.before)}</td><td>${money(x.amount)}</td><td>${money(x.after)}</td><td>${x.creator}</td></tr>`).join(""))}</div>`}
-if(page==="types")el.innerHTML=head("Loại đại lý","Hạn mức công nợ tối đa theo từng loại.",`<button class="primary" onclick="simpleForm('types')">+ Thêm loại</button>`)+`<div class="panel">${tbl(["Mã","Tên loại","Hạn mức công nợ"],db.types.map(x=>`<tr><td>${x.id}</td><td>${x.name}</td><td>${money(x.limit)}</td></tr>`).join(""))}</div>`;
-if(page==="districts")el.innerHTML=head("Quận / Khu vực","Số lượng đại lý tối đa trong từng khu vực.",`<button class="primary" onclick="simpleForm('districts')">+ Thêm quận</button>`)+`<div class="panel">${tbl(["Mã","Tên quận","Số đại lý hiện tại","Tối đa"],db.districts.map(x=>`<tr><td>${x.id}</td><td>${x.name}</td><td>${db.agencies.filter(a=>a.district===x.name).length}</td><td>${x.max}</td></tr>`).join(""))}</div>`;
-if(page==="products")el.innerHTML=head("Mặt hàng","Danh mục hàng hóa và đơn giá tham chiếu.",`<button class="primary" onclick="simpleForm('products')">+ Thêm mặt hàng</button>`)+`<div class="panel">${tbl(["Mã","Tên mặt hàng","Đơn vị","Đơn giá tham chiếu","Trạng thái"],db.products.map(x=>`<tr><td>MH-${x.id}</td><td>${x.name}</td><td>${x.unit}</td><td>${money(x.price)}</td><td>${x.status}</td></tr>`).join(""))}</div>`;
-if(page==="units")el.innerHTML=head("Đơn vị tính","Danh mục đơn vị dùng cho mặt hàng.",`<button class="primary" onclick="simpleForm('units')">+ Thêm đơn vị</button>`)+`<div class="panel">${tbl(["Mã","Tên đơn vị"],db.units.map(x=>`<tr><td>${x.id}</td><td>${x.name}</td></tr>`).join(""))}</div>`;
-if(page==="accounts")el.innerHTML=head("Tài khoản & vai trò","Tài khoản đăng nhập và vai trò được phân quyền.",`<button class="primary" onclick="simpleForm('accounts')">+ Thêm tài khoản</button>`)+`<div class="panel">${tbl(["Mã","Tên đăng nhập","Họ tên","Vai trò","Trạng thái"],db.accounts.map(x=>`<tr><td>${x.id}</td><td>${x.username}</td><td>${x.name}</td><td>${x.role}</td><td>${x.status}</td></tr>`).join(""))}</div>`;
-if(page==="audit")el.innerHTML=head("Audit log","Lịch sử thay đổi cấu hình và dữ liệu quan trọng.")+`<div class="panel">${tbl(["Mã log","Tài khoản","Đối tượng","Giá trị cũ","Giá trị mới","Thời điểm"],db.audit.map(x=>`<tr><td>${x.id}</td><td>${x.user}</td><td>${x.object}</td><td>${x.old}</td><td>${x.now}</td><td>${x.time}</td></tr>`).join(""))}</div>`;
-}
-function agencyTable(){return tbl(["Mã","Tên đại lý","Loại","Quận","Điện thoại","Công nợ","Trạng thái"],db.agencies.map(a=>`<tr><td>DL-${a.id}</td><td>${esc(a.name)}</td><td>${a.type}</td><td>${a.district}</td><td>${a.phone}</td><td>${money(a.debt)}</td><td>${a.status}</td></tr>`).join(""))}
-function filterRows(){let q=document.getElementById("q").value.toLowerCase();document.querySelectorAll("#agencytable tbody tr").forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?"":"none")}
-function showModal(title,fields,save){document.getElementById("modalroot").innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>${title}</h2><button class="secondary" onclick="closeModal()">Đóng ✕</button></div><div id="msg"></div><div class="formgrid">${fields}</div><div class="actions"><button class="secondary" onclick="closeModal()">Hủy</button><button class="primary" id="save">Lưu</button></div></div></div>`;document.getElementById("save").onclick=save}
-function closeModal(){document.getElementById("modalroot").innerHTML=""}
-function agencyForm(){showModal("Thêm đại lý",`<label class="field full">Tên đại lý<input id="name"></label><label class="field">Loại đại lý<select id="type">${db.types.map(x=>`<option>${x.name}</option>`).join("")}</select></label><label class="field">Quận<select id="district">${db.districts.map(x=>`<option>${x.name}</option>`).join("")}</select></label><label class="field">Điện thoại<input id="phone"></label><label class="field">Email<input id="email" type="email"></label><label class="field full">Địa chỉ<input id="address"></label>`,()=>{let name=document.getElementById("name").value.trim(),district=document.getElementById("district").value;if(!name){document.getElementById("msg").innerHTML='<div class="notice error">Hãy nhập tên đại lý.</div>';return}let d=db.districts.find(x=>x.name===district);if(db.agencies.filter(x=>x.district===district).length>=(d?.max||4)){document.getElementById("msg").innerHTML='<div class="notice error">Quận đã đạt số đại lý tối đa.</div>';return}db.agencies.push({id:db.nextAgency++,name,type:document.getElementById("type").value,district,phone:document.getElementById("phone").value,debt:0,status:"Hoạt động"});closeModal();render()})}
-function receiptForm(){showModal("Lập phiếu thu tiền",`<label class="field full">Đại lý<select id="ra">${db.agencies.map(a=>`<option value="${a.id}">${esc(a.name)} — nợ ${money(a.debt)}</option>`).join("")}</select></label><label class="field">Ngày thu<input id="rd" type="date" value="${new Date().toISOString().slice(0,10)}"></label><label class="field">Số tiền thu (VND)<input id="amount" type="number" min="1"></label>`,()=>{let a=db.agencies.find(x=>x.id===Number(document.getElementById("ra").value)),amount=Number(document.getElementById("amount").value);if(!a||a.debt<=0){document.getElementById("msg").innerHTML='<div class="notice error">Đại lý không có công nợ cần thu.</div>';return}if(!Number.isFinite(amount)||amount<=0||amount>a.debt){document.getElementById("msg").innerHTML=`<div class="notice error">Số tiền phải lớn hơn 0 và không vượt công nợ ${money(a.debt)}.</div>`;return}let before=a.debt;a.debt-=amount;db.receipts.push({id:db.nextReceipt++,agency:a.name,date:document.getElementById("rd").value,amount,before,after:a.debt,creator:"admin"});db.audit.unshift({id:db.audit.length+1,user:"admin",object:"Lập phiếu thu",old:money(before),now:money(a.debt),time:new Date().toLocaleString("vi-VN")});closeModal();render()})}
-function exportForm(){showModal("Lập phiếu xuất hàng",`<label class="field full">Đại lý<select id="xa">${db.agencies.map(a=>`<option value="${a.id}">${esc(a.name)} — nợ ${money(a.debt)}</option>`).join("")}</select></label><label class="field">Mặt hàng<select id="xp">${db.products.map(p=>`<option value="${p.id}">${p.name} — ${money(Math.round(p.price*1.02))}</option>`).join("")}</select></label><label class="field">Số lượng<input id="qty" type="number" min="1" value="1"></label><label class="field">Ngày xuất<input id="xd" type="date" value="${new Date().toISOString().slice(0,10)}"></label>`,()=>{let a=db.agencies.find(x=>x.id===Number(document.getElementById("xa").value)),p=db.products.find(x=>x.id===Number(document.getElementById("xp").value)),q=Number(document.getElementById("qty").value);if(!a||!p||!Number.isInteger(q)||q<=0){document.getElementById("msg").innerHTML='<div class="notice error">Số lượng phải là số nguyên dương.</div>';return}let total=Math.round(p.price*1.02)*q,limit=db.types.find(t=>t.name===a.type)?.limit||0;if(a.debt+total>limit){document.getElementById("msg").innerHTML=`<div class="notice error">Công nợ sau xuất vượt hạn mức ${money(limit)}.</div>`;return}let before=a.debt;a.debt+=total;db.exports.push({id:db.nextExport++,agency:a.name,date:document.getElementById("xd").value,total,before,after:a.debt,creator:"admin"});closeModal();render()})}
-function simpleForm(kind){const cfg={types:{title:"Loại đại lý",fields:[["Tên loại","name","text"],["Hạn mức nợ tối đa","limit","number"]]},districts:{title:"Quận",fields:[["Tên quận","name","text"],["Số đại lý tối đa","max","number"]]},units:{title:"Đơn vị tính",fields:[["Tên đơn vị","name","text"]]},products:{title:"Mặt hàng",fields:[["Tên mặt hàng","name","text"],["Đơn giá tham chiếu","price","number"]]},accounts:{title:"Tài khoản",fields:[["Tên đăng nhập","username","text"],["Họ tên","name","text"],["Vai trò","role","text"]]}}[kind];showModal("Thêm "+cfg.title,cfg.fields.map(([label,id,type])=>`<label class="field">${label}<input id="f-${id}" type="${type}"></label>`).join(""),()=>{let o={id:Math.max(0,...db[kind].map(x=>x.id))+1};cfg.fields.forEach(([l,id,type])=>o[id]=type==="number"?Number(document.getElementById("f-"+id).value):document.getElementById("f-"+id).value.trim());if(cfg.fields.some(([l,id])=>!String(o[id]??"").trim())){document.getElementById("msg").innerHTML='<div class="notice error">Vui lòng nhập đầy đủ thông tin.</div>';return}if(kind==="products"){o.unit=db.units[0]?.name||"Cái";o.status="Đang kinh doanh"}if(kind==="accounts")o.status="Hoạt động";db[kind].push(o);closeModal();render()})}
-render();
-</script></body></html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hệ thống quản lý đại lý</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f3f6fb;
+        color: #1e293b;
+      }
+      .layout {
+        display: flex;
+        min-height: 100vh;
+      }
+      .side {
+        width: 230px;
+        background: #17324d;
+        color: #fff;
+        padding: 22px 14px;
+      }
+      .logo {
+        font-weight: bold;
+        font-size: 18px;
+        padding: 0 10px 20px;
+      }
+      .logo small {
+        display: block;
+        font-size: 12px;
+        color: #b9c9d9;
+        margin-top: 6px;
+      }
+      nav button {
+        display: block;
+        width: 100%;
+        padding: 11px 12px;
+        margin: 3px 0;
+        text-align: left;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #dbeafe;
+        cursor: pointer;
+      }
+      nav button:hover,
+      nav button.active {
+        background: #31516f;
+        color: white;
+      }
+      main {
+        flex: 1;
+        min-width: 0;
+      }
+      .top {
+        height: 65px;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 22px 28px;
+        font-weight: bold;
+      }
+      .content {
+        padding: 26px;
+        max-width: 1300px;
+        margin: auto;
+      }
+      .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .head h1 {
+        font-size: 25px;
+        margin: 0 0 7px;
+      }
+      .head p {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+      }
+      button,
+      .btn {
+        cursor: pointer;
+      }
+      .primary {
+        border: 0;
+        background: #2563eb;
+        color: white;
+        border-radius: 7px;
+        padding: 10px 14px;
+        font-weight: bold;
+      }
+      .secondary {
+        border: 1px solid #cbd5e1;
+        background: white;
+        border-radius: 7px;
+        padding: 9px 12px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .card,
+      .panel {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        padding: 18px;
+      }
+      .label {
+        font-size: 13px;
+        color: #64748b;
+      }
+      .num {
+        font-size: 27px;
+        font-weight: bold;
+        margin: 12px 0 5px;
+      }
+      .muted {
+        font-size: 12px;
+        color: #64748b;
+      }
+      .panel {
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        font-size: 16px;
+        margin: 0 0 15px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 9px;
+        margin-bottom: 14px;
+      }
+      input,
+      select {
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        padding: 10px;
+        font: inherit;
+        min-width: 0;
+      }
+      input.search {
+        flex: 1;
+      }
+      .tablewrap {
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+      }
+      th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 12px;
+      }
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+      .tag {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 20px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 11px;
+      }
+      .tag.off {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .notice {
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 12px;
+        border-radius: 7px;
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+      .error {
+        background: #fef2f2;
+        color: #b91c1c;
+      }
+      .formgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        color: #475569;
+      }
+      .field input,
+      .field select {
+        width: 100%;
+      }
+      .full {
+        grid-column: 1/-1;
+      }
+      .modalbg {
+        position: fixed;
+        inset: 0;
+        background: #0f172a88;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+      }
+      .modal {
+        background: white;
+        padding: 22px;
+        border-radius: 12px;
+        width: min(560px, 100%);
+        max-height: 90vh;
+        overflow: auto;
+      }
+      .modalhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .modalhead h2 {
+        font-size: 19px;
+        margin: 0;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .foot {
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 18px;
+      }
+      @media (max-width: 850px) {
+        .side {
+          width: 190px;
+        }
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 620px) {
+        .layout {
+          display: block;
+        }
+        .side {
+          width: 100%;
+          padding: 12px;
+        }
+        .logo {
+          padding-bottom: 10px;
+        }
+        nav {
+          display: flex;
+          overflow: auto;
+        }
+        nav button {
+          white-space: nowrap;
+          width: auto;
+        }
+        .content {
+          padding: 15px;
+        }
+        .cards {
+          gap: 8px;
+        }
+        .head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .formgrid {
+          grid-template-columns: 1fr;
+        }
+        .full {
+          grid-column: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="side">
+        <div class="logo">AGENCY MANAGER<small>Hệ thống quản lý đại lý</small></div>
+        <nav id="nav">
+          <button class="active" data-page="dashboard">▦ Tổng quan</button
+          ><button data-page="agencies">♙ Đại lý</button
+          ><button data-page="exports">▤ Phiếu xuất hàng</button
+          ><button data-page="receipts">₫ Phiếu thu tiền</button
+          ><button data-page="types">◈ Loại đại lý</button
+          ><button data-page="districts">⌖ Quận / Khu vực</button
+          ><button data-page="products">▣ Mặt hàng</button
+          ><button data-page="units">◫ Đơn vị tính</button
+          ><button data-page="accounts">♙ Tài khoản & vai trò</button
+          ><button data-page="audit">◷ Audit log</button>
+        </nav>
+      </aside>
+      <main>
+        <header class="top" id="crumb">Tổng quan / Dashboard</header>
+        <section class="content" id="app"></section>
+      </main>
+    </div>
+    <div id="modalroot"></div>
+    <script>
+      const db = {
+        agencies: [
+          {
+            id: 1,
+            name: "Đại lý Minh Phát",
+            type: "Loại 1",
+            district: "Quận 1",
+            phone: "0901234567",
+            debt: 1250000,
+            status: "Hoạt động",
+          },
+          {
+            id: 2,
+            name: "Đại lý An Khang",
+            type: "Loại 2",
+            district: "Quận 3",
+            phone: "0912345678",
+            debt: 650000,
+            status: "Hoạt động",
+          },
+          {
+            id: 3,
+            name: "Đại lý Thành Công",
+            type: "Loại 1",
+            district: "Quận 5",
+            phone: "0987654321",
+            debt: 0,
+            status: "Tạm ngưng",
+          },
+        ],
+        types: [
+          { id: 1, name: "Loại 1", limit: 2000000 },
+          { id: 2, name: "Loại 2", limit: 1000000 },
+        ],
+        districts: [
+          { id: 1, name: "Quận 1", max: 4 },
+          { id: 2, name: "Quận 3", max: 4 },
+          { id: 3, name: "Quận 5", max: 4 },
+        ],
+        units: [
+          { id: 1, name: "Thùng" },
+          { id: 2, name: "Hộp" },
+          { id: 3, name: "Chai" },
+        ],
+        products: [
+          { id: 1, name: "Sản phẩm A", unit: "Thùng", price: 100000, status: "Đang kinh doanh" },
+          { id: 2, name: "Sản phẩm B", unit: "Hộp", price: 50000, status: "Đang kinh doanh" },
+        ],
+        exports: [
+          {
+            id: 1001,
+            agency: "Đại lý Minh Phát",
+            date: "2026-10-20",
+            total: 750000,
+            before: 500000,
+            after: 1250000,
+            creator: "admin",
+          },
+        ],
+        receipts: [
+          {
+            id: 2001,
+            agency: "Đại lý An Khang",
+            date: "2026-10-21",
+            amount: 350000,
+            before: 1000000,
+            after: 650000,
+            creator: "admin",
+          },
+        ],
+        accounts: [
+          {
+            id: 1,
+            username: "admin",
+            name: "Quản trị viên",
+            role: "Quản trị viên",
+            status: "Hoạt động",
+          },
+          {
+            id: 2,
+            username: "nvkd",
+            name: "Nguyễn Văn A",
+            role: "Nhân viên kinh doanh",
+            status: "Hoạt động",
+          },
+        ],
+        audit: [
+          {
+            id: 1,
+            user: "admin",
+            object: "Hạn mức nợ Loại 1",
+            old: "1.500.000",
+            now: "2.000.000",
+            time: "2026-10-20 09:30",
+          },
+        ],
+        nextAgency: 4,
+        nextExport: 1002,
+        nextReceipt: 2002,
+      };
+      const titles = {
+        dashboard: "Dashboard",
+        agencies: "Đại lý",
+        exports: "Phiếu xuất hàng",
+        receipts: "Phiếu thu tiền",
+        types: "Loại đại lý",
+        districts: "Quận / Khu vực",
+        products: "Mặt hàng",
+        units: "Đơn vị tính",
+        accounts: "Tài khoản & vai trò",
+        audit: "Audit log",
+      };
+      let page = "dashboard";
+      const money = (n) => Number(n || 0).toLocaleString("vi-VN") + " ₫";
+      const esc = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+        );
+      document.querySelectorAll("[data-page]").forEach(
+        (b) =>
+          (b.onclick = () => {
+            page = b.dataset.page;
+            document
+              .querySelectorAll("[data-page]")
+              .forEach((x) => x.classList.toggle("active", x === b));
+            render();
+          }),
+      );
+      function head(t, d, btn = "") {
+        return `<div class="head"><div><h1>${t}</h1><p>${d}</p></div>${btn}</div>`;
+      }
+      function tbl(headers, rows) {
+        return `<div class="tablewrap"><table><thead><tr>${headers.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="${headers.length}">Chưa có dữ liệu</td></tr>`}</tbody></table></div>`;
+      }
+      function render() {
+        document.getElementById("crumb").textContent = "Quản lý / " + titles[page];
+        let el = document.getElementById("app");
+        if (page === "dashboard") {
+          el.innerHTML =
+            head("Tổng quan", "Tình hình hoạt động của hệ thống") +
+            `<div class="cards"><div class="card"><div class="label">Tổng số đại lý</div><div class="num">${db.agencies.length}</div><div class="muted">Hồ sơ đang quản lý</div></div><div class="card"><div class="label">Phiếu xuất</div><div class="num">${db.exports.length}</div><div class="muted">Phiếu đã ghi nhận</div></div><div class="card"><div class="label">Phiếu thu</div><div class="num">${db.receipts.length}</div><div class="muted">Lần thu đã ghi nhận</div></div><div class="card"><div class="label">Tổng công nợ</div><div class="num">${money(db.agencies.reduce((s, a) => s + a.debt, 0))}</div><div class="muted">Dữ liệu mẫu</div></div></div><div class="panel"><h2>Danh sách đại lý</h2>${tbl(["Tên đại lý", "Loại", "Quận", "Điện thoại", "Công nợ", "Trạng thái"], db.agencies.map((a) => `<tr><td>${esc(a.name)}</td><td>${a.type}</td><td>${a.district}</td><td>${a.phone}</td><td>${money(a.debt)}</td><td>${a.status}</td></tr>`).join(""))}</div>`;
+        }
+        if (page === "agencies") {
+          el.innerHTML =
+            head(
+              "Quản lý đại lý",
+              "Hồ sơ, khu vực và công nợ đại lý.",
+              `<button class="primary" onclick="agencyForm()">+ Thêm đại lý</button>`,
+            ) +
+            `<div class="panel"><div class="toolbar"><input class="search" id="q" placeholder="Tìm theo tên, điện thoại, quận..." oninput="filterRows()"></div><div id="agencytable">${agencyTable()}</div></div>`;
+        }
+        if (page === "exports") {
+          el.innerHTML =
+            head(
+              "Phiếu xuất hàng",
+              "Ghi nhận các mặt hàng xuất cho đại lý.",
+              `<button class="primary" onclick="exportForm()">+ Lập phiếu xuất</button>`,
+            ) +
+            `<div class="panel">${tbl(["Số phiếu", "Ngày xuất", "Đại lý", "Tổng tiền", "Nợ trước", "Nợ sau", "Người lập"], db.exports.map((x) => `<tr><td>PX-${x.id}</td><td>${x.date}</td><td>${esc(x.agency)}</td><td>${money(x.total)}</td><td>${money(x.before)}</td><td>${money(x.after)}</td><td>${x.creator}</td></tr>`).join(""))}</div>`;
+        }
+        if (page === "receipts") {
+          el.innerHTML =
+            head(
+              "Phiếu thu tiền",
+              "Ghi nhận tiền thu và cập nhật công nợ.",
+              `<button class="primary" onclick="receiptForm()">+ Lập phiếu thu</button>`,
+            ) +
+            `<div class="notice">QD4: số tiền thu phải lớn hơn 0 và không được vượt công nợ hiện tại.</div><div class="panel">${tbl(["Số phiếu", "Ngày thu", "Đại lý", "Nợ trước", "Số tiền thu", "Nợ sau", "Người lập"], db.receipts.map((x) => `<tr><td>PT-${x.id}</td><td>${x.date}</td><td>${esc(x.agency)}</td><td>${money(x.before)}</td><td>${money(x.amount)}</td><td>${money(x.after)}</td><td>${x.creator}</td></tr>`).join(""))}</div>`;
+        }
+        if (page === "types")
+          el.innerHTML =
+            head(
+              "Loại đại lý",
+              "Hạn mức công nợ tối đa theo từng loại.",
+              `<button class="primary" onclick="simpleForm('types')">+ Thêm loại</button>`,
+            ) +
+            `<div class="panel">${tbl(["Mã", "Tên loại", "Hạn mức công nợ"], db.types.map((x) => `<tr><td>${x.id}</td><td>${x.name}</td><td>${money(x.limit)}</td></tr>`).join(""))}</div>`;
+        if (page === "districts")
+          el.innerHTML =
+            head(
+              "Quận / Khu vực",
+              "Số lượng đại lý tối đa trong từng khu vực.",
+              `<button class="primary" onclick="simpleForm('districts')">+ Thêm quận</button>`,
+            ) +
+            `<div class="panel">${tbl(["Mã", "Tên quận", "Số đại lý hiện tại", "Tối đa"], db.districts.map((x) => `<tr><td>${x.id}</td><td>${x.name}</td><td>${db.agencies.filter((a) => a.district === x.name).length}</td><td>${x.max}</td></tr>`).join(""))}</div>`;
+        if (page === "products")
+          el.innerHTML =
+            head(
+              "Mặt hàng",
+              "Danh mục hàng hóa và đơn giá tham chiếu.",
+              `<button class="primary" onclick="simpleForm('products')">+ Thêm mặt hàng</button>`,
+            ) +
+            `<div class="panel">${tbl(["Mã", "Tên mặt hàng", "Đơn vị", "Đơn giá tham chiếu", "Trạng thái"], db.products.map((x) => `<tr><td>MH-${x.id}</td><td>${x.name}</td><td>${x.unit}</td><td>${money(x.price)}</td><td>${x.status}</td></tr>`).join(""))}</div>`;
+        if (page === "units")
+          el.innerHTML =
+            head(
+              "Đơn vị tính",
+              "Danh mục đơn vị dùng cho mặt hàng.",
+              `<button class="primary" onclick="simpleForm('units')">+ Thêm đơn vị</button>`,
+            ) +
+            `<div class="panel">${tbl(["Mã", "Tên đơn vị"], db.units.map((x) => `<tr><td>${x.id}</td><td>${x.name}</td></tr>`).join(""))}</div>`;
+        if (page === "accounts")
+          el.innerHTML =
+            head(
+              "Tài khoản & vai trò",
+              "Tài khoản đăng nhập và vai trò được phân quyền.",
+              `<button class="primary" onclick="simpleForm('accounts')">+ Thêm tài khoản</button>`,
+            ) +
+            `<div class="panel">${tbl(["Mã", "Tên đăng nhập", "Họ tên", "Vai trò", "Trạng thái"], db.accounts.map((x) => `<tr><td>${x.id}</td><td>${x.username}</td><td>${x.name}</td><td>${x.role}</td><td>${x.status}</td></tr>`).join(""))}</div>`;
+        if (page === "audit")
+          el.innerHTML =
+            head("Audit log", "Lịch sử thay đổi cấu hình và dữ liệu quan trọng.") +
+            `<div class="panel">${tbl(["Mã log", "Tài khoản", "Đối tượng", "Giá trị cũ", "Giá trị mới", "Thời điểm"], db.audit.map((x) => `<tr><td>${x.id}</td><td>${x.user}</td><td>${x.object}</td><td>${x.old}</td><td>${x.now}</td><td>${x.time}</td></tr>`).join(""))}</div>`;
+      }
+      function agencyTable() {
+        return tbl(
+          ["Mã", "Tên đại lý", "Loại", "Quận", "Điện thoại", "Công nợ", "Trạng thái"],
+          db.agencies
+            .map(
+              (a) =>
+                `<tr><td>DL-${a.id}</td><td>${esc(a.name)}</td><td>${a.type}</td><td>${a.district}</td><td>${a.phone}</td><td>${money(a.debt)}</td><td>${a.status}</td></tr>`,
+            )
+            .join(""),
+        );
+      }
+      function filterRows() {
+        let q = document.getElementById("q").value.toLowerCase();
+        document
+          .querySelectorAll("#agencytable tbody tr")
+          .forEach((r) => (r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none"));
+      }
+      function showModal(title, fields, save) {
+        document.getElementById("modalroot").innerHTML =
+          `<div class="modalbg"><div class="modal"><div class="modalhead"><h2>${title}</h2><button class="secondary" onclick="closeModal()">Đóng ✕</button></div><div id="msg"></div><div class="formgrid">${fields}</div><div class="actions"><button class="secondary" onclick="closeModal()">Hủy</button><button class="primary" id="save">Lưu</button></div></div></div>`;
+        document.getElementById("save").onclick = save;
+      }
+      function closeModal() {
+        document.getElementById("modalroot").innerHTML = "";
+      }
+      function agencyForm() {
+        showModal(
+          "Thêm đại lý",
+          `<label class="field full">Tên đại lý<input id="name"></label><label class="field">Loại đại lý<select id="type">${db.types.map((x) => `<option>${x.name}</option>`).join("")}</select></label><label class="field">Quận<select id="district">${db.districts.map((x) => `<option>${x.name}</option>`).join("")}</select></label><label class="field">Điện thoại<input id="phone"></label><label class="field">Email<input id="email" type="email"></label><label class="field full">Địa chỉ<input id="address"></label>`,
+          () => {
+            let name = document.getElementById("name").value.trim(),
+              district = document.getElementById("district").value;
+            if (!name) {
+              document.getElementById("msg").innerHTML =
+                '<div class="notice error">Hãy nhập tên đại lý.</div>';
+              return;
+            }
+            let d = db.districts.find((x) => x.name === district);
+            if (db.agencies.filter((x) => x.district === district).length >= (d?.max || 4)) {
+              document.getElementById("msg").innerHTML =
+                '<div class="notice error">Quận đã đạt số đại lý tối đa.</div>';
+              return;
+            }
+            db.agencies.push({
+              id: db.nextAgency++,
+              name,
+              type: document.getElementById("type").value,
+              district,
+              phone: document.getElementById("phone").value,
+              debt: 0,
+              status: "Hoạt động",
+            });
+            closeModal();
+            render();
+          },
+        );
+      }
+      function receiptForm() {
+        showModal(
+          "Lập phiếu thu tiền",
+          `<label class="field full">Đại lý<select id="ra">${db.agencies.map((a) => `<option value="${a.id}">${esc(a.name)} — nợ ${money(a.debt)}</option>`).join("")}</select></label><label class="field">Ngày thu<input id="rd" type="date" value="${new Date().toISOString().slice(0, 10)}"></label><label class="field">Số tiền thu (VND)<input id="amount" type="number" min="1"></label>`,
+          () => {
+            let a = db.agencies.find((x) => x.id === Number(document.getElementById("ra").value)),
+              amount = Number(document.getElementById("amount").value);
+            if (!a || a.debt <= 0) {
+              document.getElementById("msg").innerHTML =
+                '<div class="notice error">Đại lý không có công nợ cần thu.</div>';
+              return;
+            }
+            if (!Number.isFinite(amount) || amount <= 0 || amount > a.debt) {
+              document.getElementById("msg").innerHTML =
+                `<div class="notice error">Số tiền phải lớn hơn 0 và không vượt công nợ ${money(a.debt)}.</div>`;
+              return;
+            }
+            let before = a.debt;
+            a.debt -= amount;
+            db.receipts.push({
+              id: db.nextReceipt++,
+              agency: a.name,
+              date: document.getElementById("rd").value,
+              amount,
+              before,
+              after: a.debt,
+              creator: "admin",
+            });
+            db.audit.unshift({
+              id: db.audit.length + 1,
+              user: "admin",
+              object: "Lập phiếu thu",
+              old: money(before),
+              now: money(a.debt),
+              time: new Date().toLocaleString("vi-VN"),
+            });
+            closeModal();
+            render();
+          },
+        );
+      }
+      function exportForm() {
+        showModal(
+          "Lập phiếu xuất hàng",
+          `<label class="field full">Đại lý<select id="xa">${db.agencies.map((a) => `<option value="${a.id}">${esc(a.name)} — nợ ${money(a.debt)}</option>`).join("")}</select></label><label class="field">Mặt hàng<select id="xp">${db.products.map((p) => `<option value="${p.id}">${p.name} — ${money(Math.round(p.price * 1.02))}</option>`).join("")}</select></label><label class="field">Số lượng<input id="qty" type="number" min="1" value="1"></label><label class="field">Ngày xuất<input id="xd" type="date" value="${new Date().toISOString().slice(0, 10)}"></label>`,
+          () => {
+            let a = db.agencies.find((x) => x.id === Number(document.getElementById("xa").value)),
+              p = db.products.find((x) => x.id === Number(document.getElementById("xp").value)),
+              q = Number(document.getElementById("qty").value);
+            if (!a || !p || !Number.isInteger(q) || q <= 0) {
+              document.getElementById("msg").innerHTML =
+                '<div class="notice error">Số lượng phải là số nguyên dương.</div>';
+              return;
+            }
+            let total = Math.round(p.price * 1.02) * q,
+              limit = db.types.find((t) => t.name === a.type)?.limit || 0;
+            if (a.debt + total > limit) {
+              document.getElementById("msg").innerHTML =
+                `<div class="notice error">Công nợ sau xuất vượt hạn mức ${money(limit)}.</div>`;
+              return;
+            }
+            let before = a.debt;
+            a.debt += total;
+            db.exports.push({
+              id: db.nextExport++,
+              agency: a.name,
+              date: document.getElementById("xd").value,
+              total,
+              before,
+              after: a.debt,
+              creator: "admin",
+            });
+            closeModal();
+            render();
+          },
+        );
+      }
+      function simpleForm(kind) {
+        const cfg = {
+          types: {
+            title: "Loại đại lý",
+            fields: [
+              ["Tên loại", "name", "text"],
+              ["Hạn mức nợ tối đa", "limit", "number"],
+            ],
+          },
+          districts: {
+            title: "Quận",
+            fields: [
+              ["Tên quận", "name", "text"],
+              ["Số đại lý tối đa", "max", "number"],
+            ],
+          },
+          units: { title: "Đơn vị tính", fields: [["Tên đơn vị", "name", "text"]] },
+          products: {
+            title: "Mặt hàng",
+            fields: [
+              ["Tên mặt hàng", "name", "text"],
+              ["Đơn giá tham chiếu", "price", "number"],
+            ],
+          },
+          accounts: {
+            title: "Tài khoản",
+            fields: [
+              ["Tên đăng nhập", "username", "text"],
+              ["Họ tên", "name", "text"],
+              ["Vai trò", "role", "text"],
+            ],
+          },
+        }[kind];
+        showModal(
+          "Thêm " + cfg.title,
+          cfg.fields
+            .map(
+              ([label, id, type]) =>
+                `<label class="field">${label}<input id="f-${id}" type="${type}"></label>`,
+            )
+            .join(""),
+          () => {
+            let o = { id: Math.max(0, ...db[kind].map((x) => x.id)) + 1 };
+            cfg.fields.forEach(
+              ([l, id, type]) =>
+                (o[id] =
+                  type === "number"
+                    ? Number(document.getElementById("f-" + id).value)
+                    : document.getElementById("f-" + id).value.trim()),
+            );
+            if (cfg.fields.some(([l, id]) => !String(o[id] ?? "").trim())) {
+              document.getElementById("msg").innerHTML =
+                '<div class="notice error">Vui lòng nhập đầy đủ thông tin.</div>';
+              return;
+            }
+            if (kind === "products") {
+              o.unit = db.units[0]?.name || "Cái";
+              o.status = "Đang kinh doanh";
+            }
+            if (kind === "accounts") o.status = "Hoạt động";
+            db[kind].push(o);
+            closeModal();
+            render();
+          },
+        );
+      }
+      render();
+    </script>
+  </body>
+</html>
