@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Đại lý - Lab 07</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- PHẦN 1: MÀN HÌNH ĐĂNG NHẬP (MH01) -->
+    <div id="login-section" class="login-container">
+        <div class="login-banner">
+            <h1>HỆ THỐNG QUẢN LÝ ĐẠI LÝ</h1>
+            <p>Phần mềm thực hành Lab Tuần 7 - Nhóm 02</p>
+        </div>
+        <div class="login-form-box">
+            <div class="card">
+                <h2 style="color: #1E2A4A; text-align: center; margin-bottom: 20px;">ĐĂNG NHẬP</h2>
+                <div class="form-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="username" placeholder="Nhập tên đăng nhập" value="admin">
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="password" value="123456">
+                </div>
+                <div class="form-group">
+                    <label>Vai trò</label>
+                    <select>
+                        <option>Nhân viên Kinh doanh</option>
+                        <option>Nhân viên Xuất hàng</option>
+                        <option>Kế toán</option>
+                        <option>Quản trị viên</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-success" style="width: 100%;" onclick="handleLogin()">ĐĂNG NHẬP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN 2: GIAO DIỆN CHÍNH (Sau khi đăng nhập) -->
+    <div id="main-section" class="main-layout" style="display: none;">
+        <!-- Sidebar bên trái -->
+        <div class="sidebar">
+            <h3>HTQL ĐẠI LÝ</h3>
+            <div class="menu-item active" onclick="showTab('agency')">Tiếp nhận Đại lý (MH02)</div>
+            <div class="menu-item" onclick="showTab('export')">Lập Phiếu Xuất (MH03)</div>
+            <div class="menu-item" style="color: #EF4444; margin-top: 50px;" onclick="handleLogout()">Đăng xuất</div>
+        </div>
+
+        <!-- Nội dung bên phải -->
+        <div class="content">
+            <!-- Tab 1: Tiếp nhận đại lý (MH02 - BM1) -->
+            <div id="tab-agency">
+                <h2 style="color: #1E2A4A; margin-bottom: 10px;">HỒ SƠ TIẾP NHẬN ĐẠI LÝ MỚI (BM1)</h2>
+                <div class="banner-qd">
+                    <strong>QUY ĐỊNH 1:</strong> Hiện tại có 2 loại đại lý. Mỗi quận không vượt quá 4 đại lý.
+                </div>
+                <div class="card" style="width: 100%; max-width: 700px;">
+                    <form onsubmit="event.preventDefault(); alert('Đã lưu hồ sơ đại lý thành công (Skeleton Demo)!');">
+                        <div class="form-group">
+                            <label>Tên đại lý (*)</label>
+                            <input type="text" required placeholder="Đại lý Minh Tâm">
+                        </div>
+                        <div class="form-group">
+                            <label>Loại đại lý (*)</label>
+                            <select>
+                                <option>Loại 1 (Hạn mức nợ tối đa: 50.000.000 VNĐ)</option>
+                                <option>Loại 2 (Hạn mức nợ tối đa: 100.000.000 VNĐ)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quận / Khu vực (*)</label>
+                            <select>
+                                <option>Quận 1 (Hiện có 2/4 ĐL)</option>
+                                <option>Quận 5 (Hiện có 1/4 ĐL)</option>
+                                <option>Quận 7 (Hiện có 3/4 ĐL)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Điện thoại (*)</label>
+                            <input type="tel" required placeholder="0901234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Địa chỉ</label>
+                            <input type="text" placeholder="Số 123 đường ABC...">
+                        </div>
+                        <button type="submit" class="btn-success">LƯU HỒ SƠ</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab 2: Phiếu xuất hàng (MH03 - BM2) -->
+            <div id="tab-export" style="display: none;">
+                <h2 style="color: #1E2A4A; margin-bottom: 10px;">LẬP PHIẾU XUẤT HÀNG (BM2)</h2>
+                <div class="badge-warning">
+                    <p>Đại lý: <strong>Đại lý Hoàng Phát (Loại 1)</strong></p>
+                    <p>Công nợ hiện tại: <strong>32.500.000 VNĐ</strong> | Hạn mức nợ: <strong>50.000.000 VNĐ</strong></p>
+                </div>
+                <div class="card" style="width: 100%; max-width: 700px;">
+                    <p style="color: #10B981; font-weight: bold; margin-bottom: 15px;">
+                        ✅ HỢP LỆ (QĐ2): Công nợ dự kiến sau xuất nằm trong hạn mức.
+                    </p>
+                    <button class="btn-success" onclick="alert('Đã tạo phiếu xuất kho thành công!')">XÁC NHẬN VÀ LẬP PHIẾU</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript chuyển trang đơn giản -->
+    <script>
+        function handleLogin() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-section').style.display = 'flex';
+        }
+
+        function handleLogout() {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'flex';
+        }
+
+        function showTab(tabName) {
+            document.getElementById('tab-agency').style.display = tabName === 'agency' ? 'block' : 'none';
+            document.getElementById('tab-export').style.display = tabName === 'export' ? 'block' : 'none';
+            
+            const items = document.querySelectorAll('.menu-item');
+            items[0].classList.toggle('active', tabName === 'agency');
+            items[1].classList.toggle('active', tabName === 'export');
+        }
+    </script>
+</body>
+</html>
