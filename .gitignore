@@ -1,0 +1,17 @@
+# Thư viện và kết quả kiểm thử
+node_modules/
+coverage/
+
+# Biến môi trường, thông tin bí mật
+.env
+.env.*
+
+# Log
+*.log
+npm-debug.log*
+
+# File hệ thống / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
