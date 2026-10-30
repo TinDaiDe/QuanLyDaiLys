@@ -89,3 +89,14 @@ git commit -m "feat: implement authentication API and tests"
 git push -u origin feature/auth-module
 # Tạo Pull Request: base develop <- compare feature/auth-module
 ```
+# 👥 Thành viên nhóm & Phân công
+
+**Nhóm 02 – Lớp N2.2** · Môn Công nghệ phần mềm · GVHD: Nguyễn Thanh Phong
+
+| STT | Họ và tên | MSSV | Vai trò | Phụ trách |
+|:---:|---|:---:|---|---|
+| 1 | Trương Thành Tín | 52400247 | Nhóm trưởng / Tester | Quản lý dự án, kịch bản kiểm thử và unit test (`backend/tests/`) |
+| 2 | Trần Thái Thông | 52400242 | Backend 1 | Module Đại lý (BM1, BM3, QĐ1) và Báo cáo tháng (BM5) |
+| 3 | Nguyễn Anh Hào | 52400186 | UI / Frontend | Thiết kế giao diện (`frontend/`): Dashboard và các màn hình BM1–BM5, QĐ6 |
+| 4 | Đặng Vĩnh Quang | 52400228 | Backend 2 | Module Xuất hàng (BM2, QĐ2), Thu tiền (BM4, QĐ4), Thay đổi quy định (QĐ6) |
+| 5 | Lê Trung Hiếu | 52400188 | BA (Business Analyst) | Tài liệu phân tích, đặc tả yêu cầu, User Stories (`docs/`) |
