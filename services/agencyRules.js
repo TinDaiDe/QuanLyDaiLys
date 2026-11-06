@@ -24,10 +24,11 @@ function calculateDiscount(monthlyRevenue, agencyType) {
     else rate = 0;
   }
 
-  return monthlyRevenue * rate;
+  // Làm tròn đến đồng để tránh sai số số thực (ví dụ 2999999.9699999997)
+  return Math.round(monthlyRevenue * rate);
 }
 
-// 2. Thẩm định điều kiện xuất hàng vượt trần công nợ (QĐ2 & QĐ4)
+// 2. Thẩm định điều kiện xuất hàng vượt trần công nợ (QĐ2)
 function canApproveOrder(currentDebt, orderTotal, debtLimit) {
   if (
     typeof currentDebt !== "number" ||
@@ -69,11 +70,14 @@ function validateAgencyData(agencyData) {
 
   const PHONE_REGEX = /^0\d{9}$/;
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Chỉ cho phép chữ (kể cả tiếng Việt), số và dấu câu thông dụng -> chặn <script> (XSS)
+  const NAME_REGEX = /^[\p{L}\p{N} .,'&()-]+$/u;
 
   const isValidName =
     typeof agencyName === "string" &&
     agencyName.trim().length >= 3 &&
-    agencyName.trim().length <= 100;
+    agencyName.trim().length <= 100 &&
+    NAME_REGEX.test(agencyName.trim());
 
   const isValidType = ["LOAI_1", "LOAI_2"].includes(agencyType);
 
